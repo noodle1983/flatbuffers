@@ -245,6 +245,7 @@ FileExistsFunction SetFileExistsFunction(
 bool SaveFile(const char *name, const char *buf, size_t len, bool binary) {
   std::ofstream ofs(name, binary ? std::ofstream::binary : std::ofstream::out);
   if (!ofs.is_open()) return false;
+  if (!binary) { ofs <<"\xEF\xBB\xBF"; }//utf-8 bom
   ofs.write(buf, len);
   return !ofs.bad();
 }

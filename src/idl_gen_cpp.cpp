@@ -2363,6 +2363,9 @@ class CppGenerator : public BaseGenerator {
       code_.SetValue("FIELD_VALUE", GenUnderlyingCast(field, true, call));
       code_.SetValue("NULLABLE_EXT", NullableExtension());
       code_ += "  {{FIELD_TYPE}}{{FIELD_NAME}}() const {";
+      code_ += "#ifdef ACCESS_CALLBACK";
+      code_ += "    on_access_flatbuffer_table_field(\"{{FIELD_NAME}}\", \"" + field.line_comment + "\");";
+      code_ += "#endif //ACCESS_CALLBACK";
       code_ += "    return {{FIELD_VALUE}};";
       code_ += "  }";
     } else {
@@ -2372,6 +2375,9 @@ class CppGenerator : public BaseGenerator {
                        offset_str + ")";
       code_.SetValue("FIELD_TYPE", GenOptionalDecl(type));
       code_ += "  {{FIELD_TYPE}} {{FIELD_NAME}}() const {";
+      code_ += "#ifdef ACCESS_CALLBACK";
+      code_ += "    on_access_flatbuffer_table_field(\"{{FIELD_NAME}}\", \"" + field.line_comment + "\");";
+      code_ += "#endif //ACCESS_CALLBACK";
       code_ += "    return " + opt_value + ";";
       code_ += "  }";
     }

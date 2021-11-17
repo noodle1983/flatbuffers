@@ -277,6 +277,7 @@ struct Definition {
   std::string file;
   std::vector<std::string> doc_comment;
   SymbolTable<Value> attributes;
+  std::string line_comment;
   bool generated;  // did we already output code for this definition?
   Namespace *defined_namespace;  // Where it was defined.
 
@@ -780,6 +781,7 @@ struct ParserState {
   bool attr_is_trivial_ascii_string_;
   std::string attribute_;
   std::vector<std::string> doc_comment_;
+  std::string line_comment_;
 };
 
 // A way to make error propagation less error prone by requiring values to be

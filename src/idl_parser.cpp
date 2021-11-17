@@ -649,6 +649,7 @@ CheckedError Parser::Next() {
                   "a documentation comment should be on a line on its own");
             doc_comment_.push_back(std::string(start + 1, cursor_));
           }
+          line_comment_ = std::string(start, cursor_);
           break;
         } else if (*cursor_ == '*') {
           cursor_++;
@@ -1212,6 +1213,7 @@ CheckedError Parser::ParseField(StructDef &struct_def) {
   }
 
   EXPECT(';');
+  field->line_comment = std::move(line_comment_);
   return NoError();
 }
 
