@@ -2336,7 +2336,7 @@ class CppGenerator : public BaseGenerator {
     }
   }
 
-  void GenTableFieldGetter(const FieldDef &field) {
+  void GenTableFieldGetter(const FieldDef &field, const StructDef& struct_def) {
     const auto &type = field.value.type;
     const auto offset_str = GenFieldOffsetName(field);
 
@@ -2363,9 +2363,15 @@ class CppGenerator : public BaseGenerator {
       code_.SetValue("FIELD_VALUE", GenUnderlyingCast(field, true, call));
       code_.SetValue("NULLABLE_EXT", NullableExtension());
       code_ += "  {{FIELD_TYPE}}{{FIELD_NAME}}() const {";
-      code_ += "#ifdef ACCESS_CALLBACK";
-      code_ += "    on_access_flatbuffer_table_field(\"{{FIELD_NAME}}\", \"" + field.line_comment + "\");";
-      code_ += "#endif //ACCESS_CALLBACK";
+
+      auto struct_name = Name(struct_def);
+      if (struct_name.size() > 0 && struct_name[0] != '_') {
+        code_ += "#ifdef FLATBUFFER_ACCESS_CALLBACK";
+        code_ += "    on_access_flatbuffer_table_field(\"{{FIELD_NAME}}\", \"" +
+                 field.line_comment + "\");";
+        code_ += "#endif //FLATBUFFER_ACCESS_CALLBACK";
+      }
+
       code_ += "    return {{FIELD_VALUE}};";
       code_ += "  }";
     } else {
@@ -2375,9 +2381,14 @@ class CppGenerator : public BaseGenerator {
                        offset_str + ")";
       code_.SetValue("FIELD_TYPE", GenOptionalDecl(type));
       code_ += "  {{FIELD_TYPE}} {{FIELD_NAME}}() const {";
-      code_ += "#ifdef ACCESS_CALLBACK";
-      code_ += "    on_access_flatbuffer_table_field(\"{{FIELD_NAME}}\", \"" + field.line_comment + "\");";
-      code_ += "#endif //ACCESS_CALLBACK";
+
+      auto struct_name = Name(struct_def);
+      if (struct_name.size() > 0 && struct_name[0] != '_') {
+        code_ += "#ifdef ACCESS_CALLBACK";
+        code_ += "    on_access_flatbuffer_table_field(\"{{FIELD_NAME}}\", \"" +
+                 field.line_comment + "\");";
+        code_ += "#endif //ACCESS_CALLBACK";
+      }
       code_ += "    return " + opt_value + ";";
       code_ += "  }";
     }
@@ -2636,7 +2647,7 @@ class CppGenerator : public BaseGenerator {
       }
 
       code_.SetValue("FIELD_NAME", Name(field));
-      GenTableFieldGetter(field);
+      GenTableFieldGetter(field, struct_def);
       if (opts_.mutable_buffer) { GenTableFieldSetter(field); }
 
       auto nfn = GetNestedFlatBufferName(field);
