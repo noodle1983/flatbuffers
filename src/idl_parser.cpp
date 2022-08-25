@@ -993,7 +993,9 @@ CheckedError Parser::ParseField(StructDef &struct_def) {
     }
 
     if (IsVector(type) && field->value.constant != "0" &&
-        field->value.constant != "[]") {
+        field->value.constant.length() > 1 &&
+        field->value.constant[0] != '[' &&
+        field->value.constant[field->value.constant.length() - 1] != ']') {
       return Error("The only supported default for vectors is `[]`.");
     }
   }
@@ -2102,11 +2104,15 @@ CheckedError Parser::ParseSingleValue(const std::string *name, Value &e,
   }
   // Match empty vectors for default-empty-vectors.
   if (!match && IsVector(e.type) && token_ == '[') {
-    NEXT();
+    const char *constant_begin = cursor_ - 1;
+    do { NEXT();
+    } while (token_ != ']' && token_ != ';' && token_ != '\r' &&
+             token_ != '\n');
     if (token_ != ']') { return Error("Expected `]` in vector default"); }
+    const char *constant_end = cursor_;
     NEXT();
     match = true;
-    e.constant = "[]";
+    e.constant = std::string(constant_begin, constant_end);
   }
 
 #undef FORCE_ECHECK
@@ -2574,7 +2580,7 @@ bool Parser::SupportsOptionalScalars() const {
 
 bool Parser::SupportsDefaultVectorsAndStrings() const {
   static FLATBUFFERS_CONSTEXPR unsigned long supported_langs =
-      IDLOptions::kRust | IDLOptions::kSwift;
+      IDLOptions::kRust | IDLOptions::kSwift | IDLOptions::kCpp;
   return !(opts.lang_to_generate & ~supported_langs);
 }
 

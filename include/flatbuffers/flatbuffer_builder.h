@@ -1077,6 +1077,21 @@ class FlatBufferBuilder {
     return Offset<const T *>(GetSize());
   }
 
+  template<typename T, typename Alloc>
+  static std::string BuildDetachedVectorBuffer(const std::vector<T, Alloc>& v) {
+    FlatBufferBuilder fbb;
+    auto o = fbb.CreateVector(v);
+    fbb.Finish(o);
+    return std::string((const char *)fbb.GetBufferPointer(), fbb.GetSize());
+  }
+
+  static std::string BuildDetachedStringBuffer(const std::string& s) {
+    FlatBufferBuilder fbb;
+    auto o = fbb.CreateString(s);
+    fbb.Finish(o);
+    return std::string((const char *)fbb.GetBufferPointer(), fbb.GetSize());
+  }
+
   /// @brief Finish serializing a buffer by writing the root offset.
   /// @param[in] file_identifier If a `file_identifier` is given, the buffer
   /// will be prefixed with a standard FlatBuffers file header.

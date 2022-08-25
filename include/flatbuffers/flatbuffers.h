@@ -263,6 +263,18 @@ inline const char *flatbuffers_version_string() {
         return !bool(T(rhs)); \
     }
 /// @endcond
+
+  template<int instance = 0>
+  const void* GetConstEmptyVectorBuffer() {
+    const static offset_t v[2] = {0, 0}; //offset_t is int32_t
+    return v;
+  }
+
+  template<typename T>
+  const flatbuffers::Vector<T>* GetConstEmptyVector() {
+    return (const flatbuffers::Vector<T>*)GetConstEmptyVectorBuffer();
+  }
+
 }  // namespace flatbuffers
 
 // clang-format on
