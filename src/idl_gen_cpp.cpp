@@ -2367,7 +2367,7 @@ class CppGenerator : public BaseGenerator {
       auto struct_name = Name(struct_def);
       if (struct_name.size() > 0 && struct_name[0] != '_') {
         code_ += "#ifdef FLATBUFFER_ACCESS_CALLBACK";
-        code_ += "    on_access_flatbuffer_table_field(\"{{FIELD_NAME}}\", \"" +
+        code_ += "    on_access_flatbuffer_table_field(u8\"{{FIELD_NAME}}\", u8\"" +
                  field.line_comment + "\");";
         code_ += "#endif //FLATBUFFER_ACCESS_CALLBACK";
       }
@@ -2385,7 +2385,7 @@ class CppGenerator : public BaseGenerator {
       auto struct_name = Name(struct_def);
       if (struct_name.size() > 0 && struct_name[0] != '_') {
         code_ += "#ifdef ACCESS_CALLBACK";
-        code_ += "    on_access_flatbuffer_table_field(\"{{FIELD_NAME}}\", \"" +
+        code_ += "    on_access_flatbuffer_table_field(u8\"{{FIELD_NAME}}\", u8\"" +
                  field.line_comment + "\");";
         code_ += "#endif //ACCESS_CALLBACK";
       }
