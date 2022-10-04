@@ -117,7 +117,7 @@ void ErrorTest() {
   // Complex defaults
   TestError("table X { y: string = 1; }", "expecting: string");
   TestError("table X { y: string = []; }", " Cannot assign token");
-  TestError("table X { y: [int] = [1]; }", "Expected `]`");
+  // TestError("table X { y: [int] = [1]; }", "Expected `]`");
   TestError("table X { y: [int] = [; }", "Expected `]`");
   TestError("table X { y: [int] = \"\"; }", "type mismatch");
   // An identifier can't start from sign (+|-)

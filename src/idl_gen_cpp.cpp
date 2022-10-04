@@ -1755,6 +1755,8 @@ class CppGenerator : public BaseGenerator {
   std::string GenDefaultConstant(const FieldDef &field) {
     if (IsFloat(field.value.type.base_type))
       return float_const_gen_.GenFloatConstant(field);
+    else if (IsVector(field.value.type) || IsString(field.value.type))
+      return "0";
     else
       return NumToStringCpp(field.value.constant, field.value.type.base_type);
   }
@@ -2365,8 +2367,78 @@ class CppGenerator : public BaseGenerator {
       code_.SetValue("FIELD_VALUE", GenUnderlyingCast(field, true, call));
       code_.SetValue("NULLABLE_EXT", NullableExtension());
       code_ += "  {{FIELD_TYPE}}{{FIELD_NAME}}() const {";
-      code_ += "    return {{FIELD_VALUE}};";
-      code_ += "  }";
+      if (IsVector(type)) {
+        std::string constant = field.value.constant;
+        bool is_default_null = (constant == "0");
+        bool is_default_empty = (constant == "[]");
+        const auto inner_type_name = GenTypeWire(
+            type.VectorType(), "", VectorElementUserFacing(type.VectorType()));
+        if (is_default_null) {
+          code_ += "    return {{FIELD_VALUE}};";
+          code_ += "  }";
+        } else if (is_default_empty) {
+          code_ += "    auto ret = {{FIELD_VALUE}};";
+          code_ += "    if (ret == nullptr){";
+          code_ += "      return flatbuffers::GetConstEmptyVector<" +
+                   inner_type_name + ">();";
+          code_ += "    }";
+          code_ += "    return ret;";
+          code_ += "  }";
+        } else {
+          code_ += "    auto ret = {{FIELD_VALUE}};";
+          code_ += "    if (ret == nullptr){";
+          code_ += "      return flatbuffers::GetDefault_{{FIELD_NAME}}();";
+          code_ += "    }";
+          code_ += "    return ret;";
+          code_ += "  }";
+          code_ += "  static {{FIELD_TYPE}} GetDefault_{{FIELD_NAME}}(){";
+          code_ +=
+              "    static std::string buffer = "
+              "flatbuffers::FlatBufferBuilder::BuildDetachedStringBuffer(std::"
+              "vector<" +
+              inner_type_name + ">{" + constant + "}";
+          code_ += "    return flat::buffers::GetRoot<flatbuffers::Vector<" +
+                   inner_type_name + ">>(buffer.data())";
+          code_ += "  }";
+        }
+      } else if (IsString(type)) {
+        std::string constant = field.value.constant;
+        bool is_default_null = (constant == "0");
+        bool is_default_empty = (constant == "");
+        if (is_default_null) {
+          code_ += "    return {{FIELD_VALUE}};";
+          code_ += "  }";
+        } else if (is_default_empty) {
+          code_ += "    auto ret = {{FIELD_VALUE}};";
+          code_ += "    if (ret == nullptr){";
+          code_ +=
+              "      return (const "
+              "flatbuffers::String*)flatbuffers::GetConstEmptyVector<char>();";
+          code_ += "    }";
+          code_ += "    return ret;";
+          code_ += "  }";
+        } else {
+          code_ += "    auto ret = {{FIELD_VALUE}};";
+          code_ += "    if (ret == nullptr){";
+          code_ += "      return flatbuffers::GetDefault_{{FIELD_NAME}}();";
+          code_ += "    }";
+          code_ += "    return ret;";
+          code_ += "  }";
+          code_ += "  static {{FIELD_TYPE}} GetDefault_{{FIELD_NAME}}(){";
+          code_ +=
+              "    static std::string buffer = "
+              "flatbuffers::FlatBufferBuilder::BuildDetachedStringBuffer(\"" +
+              constant + "\"";
+          code_ +=
+              "    return "
+              "flat::buffers::GetRoot<flatbuffers::String>(buffer.data())";
+          code_ += "  }";
+        }
+
+      } else {
+        code_ += "    return {{FIELD_VALUE}};";
+        code_ += "  }";
+      }
     } else {
       auto wire_type = GenTypeBasic(type, false);
       auto face_type = GenTypeBasic(type, true);
